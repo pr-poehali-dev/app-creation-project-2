@@ -70,16 +70,21 @@ export default function Index() {
         const worksheet = workbook.Sheets[sheetName];
         const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
+        console.log('Прочитано строк:', jsonData.length);
+        console.log('Первая строка:', jsonData[0]);
+
         const parsedEquipment: EquipmentData[] = [];
         const equipmentMap = new Map<string, any>();
 
         jsonData.forEach((row: any) => {
-          const id = row['ID'] || row['id'] || row['Агрегат'] || 'Unknown';
-          const name = row['Название'] || row['name'] || row['Наименование'] || id;
-          const motor = row['Двигатель'] || row['motor'] || row['Мотор'] || 'N/A';
-          const power = parseFloat(row['Мощность'] || row['power'] || row['кВт'] || '0');
-          const time = row['Время'] || row['time'] || row['Timestamp'] || 'N/A';
-          const value = parseFloat(row['Вибрация'] || row['vibration'] || row['value'] || '0');
+          const id = row['ID'] || row['id'] || row['Агрегат'] || row['№'] || `EQ-${Math.random().toString(36).substr(2, 9)}`;
+          const name = row['Название'] || row['name'] || row['Наименование'] || row['Агрегат'] || id;
+          const motor = row['Двигатель'] || row['motor'] || row['Мотор'] || row['Двигатель'] || 'N/A';
+          const powerStr = row['Мощность'] || row['power'] || row['кВт'] || row['Мощность, кВт'] || '0';
+          const power = parseFloat(String(powerStr).replace(/[^\d.]/g, '')) || 0;
+          const time = row['Время'] || row['time'] || row['Timestamp'] || row['Дата'] || new Date().toLocaleTimeString();
+          const valueStr = row['Вибрация'] || row['vibration'] || row['value'] || row['Значение'] || '0';
+          const value = parseFloat(String(valueStr).replace(/[^\d.]/g, '')) || 0;
 
           if (!equipmentMap.has(id)) {
             equipmentMap.set(id, {
@@ -98,14 +103,20 @@ export default function Index() {
           parsedEquipment.push(eq);
         });
 
+        console.log('Распознано агрегатов:', parsedEquipment.length);
+        console.log('Данные:', parsedEquipment);
+
         if (parsedEquipment.length > 0) {
           const processedData = processEquipmentData(parsedEquipment);
+          console.log('Обработано агрегатов:', processedData.length);
           setEquipment(processedData);
           setSelectedEquipment(processedData[0]);
+        } else {
+          alert('Не удалось распознать данные. Проверьте структуру файла.');
         }
       } catch (error) {
         console.error('Ошибка парсинга файла:', error);
-        alert('Ошибка чтения файла. Проверьте формат данных.');
+        alert(`Ошибка чтения файла: ${error}\nПроверьте формат данных.`);
       } finally {
         setIsLoading(false);
       }
@@ -217,7 +228,21 @@ export default function Index() {
               <Icon name="Upload" size={40} className="text-green-400" />
             </div>
             <p className="text-foreground font-mono text-lg mb-2">[NO_DATA_LOADED]</p>
-            <p className="text-muted-foreground font-mono text-sm">Загрузите XLS файл для начала анализа</p>
+            <p className="text-muted-foreground font-mono text-sm mb-4">Загрузите XLS файл для начала анализа</p>
+            <div className="text-center">
+              <p className="text-xs text-muted-foreground font-mono mb-2">Формат XLS файла:</p>
+              <div className="bg-muted/20 p-3 rounded border border-green-500/20 font-mono text-xs text-left">
+                <p className="text-green-400">ID, Название, Двигатель, Мощность, Время, Вибрация</p>
+              </div>
+              <a 
+                href="/demo-vibration-data.csv" 
+                download
+                className="inline-block mt-4 px-4 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/50 font-mono text-xs"
+              >
+                <Icon name="Download" size={14} className="inline mr-2" />
+                Скачать пример CSV
+              </a>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
