@@ -5,8 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Icon from '@/components/ui/icon';
 import {
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -70,81 +68,84 @@ const equipment = [
 ];
 
 const statusConfig = {
-  ok: { label: 'Норма', color: 'bg-emerald-500', icon: 'CheckCircle' },
-  warning: { label: 'Внимание', color: 'bg-amber-500', icon: 'AlertTriangle' },
-  critical: { label: 'Критично', color: 'bg-red-500', icon: 'AlertCircle' },
+  ok: { label: 'НОРМА', color: 'bg-green-500/20 text-green-400 border-green-500/50', icon: 'CheckCircle' },
+  warning: { label: 'ВНИМАНИЕ', color: 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50', icon: 'AlertTriangle' },
+  critical: { label: 'КРИТИЧНО', color: 'bg-red-500/20 text-red-400 border-red-500/50', icon: 'AlertCircle' },
 };
 
 const trendConfig = {
-  stable: { icon: 'Minus', color: 'text-slate-400' },
-  rising: { icon: 'TrendingUp', color: 'text-red-500' },
-  falling: { icon: 'TrendingDown', color: 'text-emerald-500' },
+  stable: { icon: 'Minus', color: 'text-slate-500' },
+  rising: { icon: 'TrendingUp', color: 'text-red-400' },
+  falling: { icon: 'TrendingDown', color: 'text-green-400' },
 };
 
 export default function Index() {
   const [selectedEquipment, setSelectedEquipment] = useState(equipment[0]);
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="bg-slate-900 text-white border-b border-slate-800">
+    <div className="min-h-screen bg-background">
+      <header className="bg-card border-b-2 border-green-500/30">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Icon name="Activity" size={28} className="text-blue-400" />
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-green-500/10 border-2 border-green-500/50 flex items-center justify-center">
+                <Icon name="Activity" size={24} className="text-green-400" />
+              </div>
               <div>
-                <h1 className="text-xl font-semibold">ВиброКонтроль</h1>
-                <p className="text-xs text-slate-400">Система мониторинга вибродиагностики</p>
+                <h1 className="text-xl font-bold tracking-wider text-foreground">ВИБРОКОНТРОЛЬ v2.1</h1>
+                <p className="text-xs text-muted-foreground font-mono">SYS://VIBRO-DIAGNOSTIC-MONITOR</p>
               </div>
             </div>
             <div className="flex items-center gap-4">
-              <div className="text-right">
-                <p className="text-xs text-slate-400">Последнее обновление</p>
-                <p className="text-sm font-medium">{new Date().toLocaleTimeString('ru-RU')}</p>
+              <div className="text-right font-mono">
+                <p className="text-xs text-muted-foreground">UPTIME</p>
+                <p className="text-sm font-bold text-green-400">{new Date().toLocaleTimeString('ru-RU')}</p>
               </div>
+              <div className="w-3 h-3 rounded-full bg-green-400 animate-pulse"></div>
             </div>
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-6 py-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <Card className="p-6 bg-white border-slate-200">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-slate-600 font-medium">Всего агрегатов</span>
-              <Icon name="Package" size={20} className="text-slate-400" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+          <Card className="p-6 bg-card border-2 border-green-500/30">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs text-muted-foreground font-mono tracking-wider">TOTAL UNITS</span>
+              <Icon name="Package" size={18} className="text-green-400" />
             </div>
-            <p className="text-3xl font-bold text-slate-900">{equipment.length}</p>
+            <p className="text-4xl font-bold text-green-400 font-mono">{equipment.length.toString().padStart(2, '0')}</p>
           </Card>
 
-          <Card className="p-6 bg-white border-slate-200">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-slate-600 font-medium">В норме</span>
-              <Icon name="CheckCircle" size={20} className="text-emerald-500" />
+          <Card className="p-6 bg-card border-2 border-green-500/30">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs text-muted-foreground font-mono tracking-wider">OPERATIONAL</span>
+              <Icon name="CheckCircle" size={18} className="text-green-400" />
             </div>
-            <p className="text-3xl font-bold text-emerald-600">
-              {equipment.filter((e) => e.status === 'ok').length}
+            <p className="text-4xl font-bold text-green-400 font-mono">
+              {equipment.filter((e) => e.status === 'ok').length.toString().padStart(2, '0')}
             </p>
           </Card>
 
-          <Card className="p-6 bg-white border-slate-200">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-slate-600 font-medium">Требуют внимания</span>
-              <Icon name="AlertTriangle" size={20} className="text-amber-500" />
+          <Card className="p-6 bg-card border-2 border-yellow-500/30">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs text-muted-foreground font-mono tracking-wider">ALERTS</span>
+              <Icon name="AlertTriangle" size={18} className="text-yellow-400" />
             </div>
-            <p className="text-3xl font-bold text-amber-600">
-              {equipment.filter((e) => e.status === 'warning' || e.status === 'critical').length}
+            <p className="text-4xl font-bold text-yellow-400 font-mono">
+              {equipment.filter((e) => e.status === 'warning' || e.status === 'critical').length.toString().padStart(2, '0')}
             </p>
           </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="p-6 bg-white border-slate-200">
-            <h2 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
-              <Icon name="List" size={20} />
-              Оборудование
+          <Card className="p-6 bg-card border-2 border-green-500/30">
+            <h2 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2 tracking-wider font-mono">
+              <Icon name="List" size={18} className="text-green-400" />
+              [EQUIPMENT_REGISTRY]
             </h2>
 
-            <div className="space-y-3">
+            <div className="space-y-2">
               {equipment.map((item) => {
                 const statusInfo = statusConfig[item.status];
                 const trendInfo = trendConfig[item.trend];
@@ -153,37 +154,36 @@ export default function Index() {
                   <button
                     key={item.id}
                     onClick={() => setSelectedEquipment(item)}
-                    className={`w-full p-4 rounded-lg border-2 transition-all text-left hover:shadow-md ${
+                    className={`w-full p-4 border-2 transition-all text-left font-mono ${
                       selectedEquipment.id === item.id
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-slate-200 bg-white hover:border-slate-300'
+                        ? 'border-green-500 bg-green-500/10'
+                        : 'border-muted bg-card/50 hover:border-green-500/50'
                     }`}
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className="font-semibold text-slate-900">{item.id}</span>
+                          <span className="font-bold text-foreground text-sm">[{item.id}]</span>
                           <Badge
                             variant="outline"
-                            className={`${statusInfo.color} text-white border-0`}
+                            className={`${statusInfo.color} border text-xs font-mono`}
                           >
-                            <Icon name={statusInfo.icon} size={12} className="mr-1" />
                             {statusInfo.label}
                           </Badge>
                         </div>
-                        <p className="text-sm text-slate-600">{item.name}</p>
-                        <p className="text-xs text-slate-500 mt-1">
-                          {item.motor} • {item.power}
+                        <p className="text-xs text-muted-foreground">{item.name}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {item.motor} / {item.power}
                         </p>
                       </div>
                       <div className="text-right">
-                        <div className="flex items-center gap-1 justify-end">
-                          <span className="text-2xl font-bold text-slate-900">{item.vibration}</span>
-                          <span className="text-sm text-slate-500">мм/с</span>
+                        <div className="flex items-baseline gap-1 justify-end">
+                          <span className="text-2xl font-bold text-green-400">{item.vibration}</span>
+                          <span className="text-xs text-muted-foreground">mm/s</span>
                         </div>
                         <div className="flex items-center gap-1 justify-end mt-1">
-                          <Icon name={trendInfo.icon} size={16} className={trendInfo.color} />
-                          <span className="text-xs text-slate-500">макс {item.limit}</span>
+                          <Icon name={trendInfo.icon} size={14} className={trendInfo.color} />
+                          <span className="text-xs text-muted-foreground">MAX:{item.limit}</span>
                         </div>
                       </div>
                     </div>
@@ -193,61 +193,62 @@ export default function Index() {
             </div>
           </Card>
 
-          <Card className="p-6 bg-white border-slate-200">
+          <Card className="p-6 bg-card border-2 border-green-500/30">
             <div className="mb-4">
-              <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2 mb-2">
-                <Icon name="TrendingUp" size={20} />
-                Анализ: {selectedEquipment.id}
+              <h2 className="text-sm font-bold text-foreground flex items-center gap-2 mb-1 tracking-wider font-mono">
+                <Icon name="TrendingUp" size={18} className="text-green-400" />
+                [ANALYSIS_MODULE]
               </h2>
-              <p className="text-sm text-slate-600">{selectedEquipment.name}</p>
+              <p className="text-xs text-muted-foreground font-mono">{selectedEquipment.id} / {selectedEquipment.name}</p>
             </div>
 
             <Tabs defaultValue="trend" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-4">
-                <TabsTrigger value="trend">Тренд вибрации</TabsTrigger>
-                <TabsTrigger value="info">Информация</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 mb-4 bg-muted/50 border border-green-500/30">
+                <TabsTrigger value="trend" className="font-mono text-xs data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400">TREND</TabsTrigger>
+                <TabsTrigger value="info" className="font-mono text-xs data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400">INFO</TabsTrigger>
               </TabsList>
 
               <TabsContent value="trend" className="space-y-4">
-                <div className="h-[300px]">
+                <div className="h-[280px] p-4 bg-muted/20 border border-green-500/20">
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={trendData}>
                       <defs>
                         <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#0EA5E9" stopOpacity={0.3} />
-                          <stop offset="95%" stopColor="#0EA5E9" stopOpacity={0} />
+                          <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                       <XAxis
                         dataKey="time"
-                        stroke="#64748b"
-                        style={{ fontSize: '12px' }}
+                        stroke="#9ca3af"
+                        style={{ fontSize: '11px', fontFamily: 'monospace' }}
                       />
                       <YAxis
-                        stroke="#64748b"
-                        style={{ fontSize: '12px' }}
-                        label={{ value: 'мм/с', angle: -90, position: 'insideLeft' }}
+                        stroke="#9ca3af"
+                        style={{ fontSize: '11px', fontFamily: 'monospace' }}
                       />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: '#1e293b',
-                          border: 'none',
-                          borderRadius: '8px',
+                          backgroundColor: '#1f2937',
+                          border: '1px solid #22c55e',
                           color: '#fff',
+                          fontFamily: 'monospace',
+                          fontSize: '12px',
                         }}
                       />
                       <ReferenceLine
                         y={selectedEquipment.limit}
                         stroke="#ef4444"
                         strokeDasharray="5 5"
-                        label={{ value: 'Предел', fill: '#ef4444', fontSize: 12 }}
+                        strokeWidth={2}
+                        label={{ value: 'LIMIT', fill: '#ef4444', fontSize: 11, fontFamily: 'monospace' }}
                       />
                       <Area
                         type="monotone"
                         dataKey="value"
-                        stroke="#0EA5E9"
-                        strokeWidth={3}
+                        stroke="#22c55e"
+                        strokeWidth={2}
                         fill="url(#colorValue)"
                       />
                     </AreaChart>
@@ -255,58 +256,55 @@ export default function Index() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 bg-slate-50 rounded-lg">
-                    <p className="text-xs text-slate-600 mb-1">Текущее значение</p>
-                    <p className="text-2xl font-bold text-slate-900">
-                      {selectedEquipment.vibration} <span className="text-sm text-slate-500">мм/с</span>
+                  <div className="p-4 bg-muted/20 border-l-4 border-green-500">
+                    <p className="text-xs text-muted-foreground mb-1 font-mono">CURRENT</p>
+                    <p className="text-2xl font-bold text-green-400 font-mono">
+                      {selectedEquipment.vibration}
                     </p>
                   </div>
-                  <div className="p-4 bg-slate-50 rounded-lg">
-                    <p className="text-xs text-slate-600 mb-1">Допустимый предел</p>
-                    <p className="text-2xl font-bold text-slate-900">
-                      {selectedEquipment.limit} <span className="text-sm text-slate-500">мм/с</span>
+                  <div className="p-4 bg-muted/20 border-l-4 border-red-500">
+                    <p className="text-xs text-muted-foreground mb-1 font-mono">LIMIT</p>
+                    <p className="text-2xl font-bold text-red-400 font-mono">
+                      {selectedEquipment.limit}
                     </p>
                   </div>
                 </div>
               </TabsContent>
 
-              <TabsContent value="info" className="space-y-4">
-                <div className="space-y-3">
-                  <div className="p-4 border border-slate-200 rounded-lg">
-                    <p className="text-xs text-slate-500 mb-1">Электродвигатель</p>
-                    <p className="text-base font-semibold text-slate-900">{selectedEquipment.motor}</p>
+              <TabsContent value="info" className="space-y-3">
+                <div className="space-y-2">
+                  <div className="p-3 border-l-4 border-green-500 bg-muted/20">
+                    <p className="text-xs text-muted-foreground mb-1 font-mono">MOTOR</p>
+                    <p className="text-sm font-bold text-foreground font-mono">{selectedEquipment.motor}</p>
                   </div>
-                  <div className="p-4 border border-slate-200 rounded-lg">
-                    <p className="text-xs text-slate-500 mb-1">Мощность</p>
-                    <p className="text-base font-semibold text-slate-900">{selectedEquipment.power}</p>
+                  <div className="p-3 border-l-4 border-green-500 bg-muted/20">
+                    <p className="text-xs text-muted-foreground mb-1 font-mono">POWER</p>
+                    <p className="text-sm font-bold text-foreground font-mono">{selectedEquipment.power}</p>
                   </div>
-                  <div className="p-4 border border-slate-200 rounded-lg">
-                    <p className="text-xs text-slate-500 mb-1">Статус</p>
-                    <Badge className={`${statusConfig[selectedEquipment.status].color} text-white border-0`}>
-                      <Icon name={statusConfig[selectedEquipment.status].icon} size={14} className="mr-1" />
+                  <div className="p-3 border-l-4 border-green-500 bg-muted/20">
+                    <p className="text-xs text-muted-foreground mb-1 font-mono">STATUS</p>
+                    <Badge className={`${statusConfig[selectedEquipment.status].color} border text-xs font-mono`}>
                       {statusConfig[selectedEquipment.status].label}
                     </Badge>
                   </div>
-                  <div className="p-4 border border-slate-200 rounded-lg">
-                    <p className="text-xs text-slate-500 mb-1">Тренд изменения</p>
+                  <div className="p-3 border-l-4 border-green-500 bg-muted/20">
+                    <p className="text-xs text-muted-foreground mb-1 font-mono">TREND</p>
                     <div className="flex items-center gap-2">
                       <Icon
                         name={trendConfig[selectedEquipment.trend].icon}
-                        size={20}
+                        size={18}
                         className={trendConfig[selectedEquipment.trend].color}
                       />
-                      <span className="text-base font-semibold text-slate-900 capitalize">
-                        {selectedEquipment.trend === 'stable' && 'Стабильный'}
-                        {selectedEquipment.trend === 'rising' && 'Растущий'}
-                        {selectedEquipment.trend === 'falling' && 'Снижающийся'}
+                      <span className="text-sm font-bold text-foreground font-mono uppercase">
+                        {selectedEquipment.trend}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+                <Button className="w-full bg-green-500/20 hover:bg-green-500/30 text-green-400 border-2 border-green-500/50 font-mono text-xs tracking-wider">
                   <Icon name="FileText" size={16} className="mr-2" />
-                  Сформировать отчёт
+                  [GENERATE_REPORT]
                 </Button>
               </TabsContent>
             </Tabs>
