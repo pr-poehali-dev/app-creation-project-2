@@ -38,6 +38,7 @@ export default function Index() {
   const [selectedEquipment, setSelectedEquipment] = useState<EquipmentData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [showSummaryReport, setShowSummaryReport] = useState(false);
   const [newEquipment, setNewEquipment] = useState({ id: '', name: '', motor: '', power: '' });
   const [newMeasurement, setNewMeasurement] = useState({ time: '', value: '' });
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -217,6 +218,15 @@ export default function Index() {
               </div>
             </div>
             <div className="flex items-center gap-4">
+              {equipment.length > 0 && (
+                <Button
+                  onClick={() => setShowSummaryReport(!showSummaryReport)}
+                  className="bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border-2 border-purple-500/50 font-mono text-xs tracking-wider"
+                >
+                  <Icon name="FileText" size={16} className="mr-2" />
+                  {showSummaryReport ? '[CLOSE]' : '[ОТЧЁТ]'}
+                </Button>
+              )}
               <Button
                 onClick={() => setShowAddForm(!showAddForm)}
                 className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border-2 border-blue-500/50 font-mono text-xs tracking-wider"
@@ -354,7 +364,123 @@ export default function Index() {
           </Card>
         </div>
 
-        {equipment.length === 0 ? (
+        {showSummaryReport && equipment.length > 0 ? (
+          <Card className="p-6 bg-card border-2 border-purple-500/30">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-bold text-foreground flex items-center gap-2 tracking-wider font-mono">
+                <Icon name="FileText" size={20} className="text-purple-400" />
+                [СВОДНЫЙ_ОТЧЁТ]
+              </h2>
+              <Button
+                onClick={() => setShowSummaryReport(false)}
+                className="bg-purple-500/20 hover:bg-purple-500/30 text-purple-400 border-2 border-purple-500/50 font-mono text-xs"
+              >
+                <Icon name="X" size={16} className="mr-2" />
+                ЗАКРЫТЬ
+              </Button>
+            </div>
+
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="p-4 bg-green-500/10 border-2 border-green-500/30">
+                  <p className="text-xs text-muted-foreground font-mono mb-2">ЗОНА A (НОРМА)</p>
+                  <p className="text-3xl font-bold text-green-400 font-mono">
+                    {processedEquipment.filter(e => e.gostAnalysis?.zone === 'A').length}
+                  </p>
+                </div>
+                <div className="p-4 bg-yellow-500/10 border-2 border-yellow-500/30">
+                  <p className="text-xs text-muted-foreground font-mono mb-2">ЗОНА B (ДОПУСТИМО)</p>
+                  <p className="text-3xl font-bold text-yellow-400 font-mono">
+                    {processedEquipment.filter(e => e.gostAnalysis?.zone === 'B').length}
+                  </p>
+                </div>
+                <div className="p-4 bg-orange-500/10 border-2 border-orange-500/30">
+                  <p className="text-xs text-muted-foreground font-mono mb-2">ЗОНА C (НЕДОПУСТИМО)</p>
+                  <p className="text-3xl font-bold text-orange-400 font-mono">
+                    {processedEquipment.filter(e => e.gostAnalysis?.zone === 'C').length}
+                  </p>
+                </div>
+                <div className="p-4 bg-red-500/10 border-2 border-red-500/30">
+                  <p className="text-xs text-muted-foreground font-mono mb-2">ЗОНА D (ОПАСНО)</p>
+                  <p className="text-3xl font-bold text-red-400 font-mono">
+                    {processedEquipment.filter(e => e.gostAnalysis?.zone === 'D').length}
+                  </p>
+                </div>
+              </div>
+
+              <div className="p-4 bg-muted/20 border-l-4 border-purple-500">
+                <h3 className="text-sm text-purple-400 font-mono font-bold mb-3">КРИТИЧЕСКИЕ АГРЕГАТЫ</h3>
+                {processedEquipment.filter(e => e.gostAnalysis?.zone === 'C' || e.gostAnalysis?.zone === 'D').length > 0 ? (
+                  <div className="space-y-2">
+                    {processedEquipment.filter(e => e.gostAnalysis?.zone === 'C' || e.gostAnalysis?.zone === 'D').map(eq => (
+                      <div key={eq.id} className="p-3 bg-red-500/10 border border-red-500/30">
+                        <div className="flex justify-between items-center">
+                          <div>
+                            <p className="text-sm text-foreground font-mono font-bold">[{eq.id}] {eq.name}</p>
+                            <p className="text-xs text-muted-foreground font-mono">{eq.motor} / {eq.power} кВт</p>
+                          </div>
+                          <div className="text-right">
+                            <Badge variant="outline" className={`${statusConfig[eq.gostAnalysis!.color as keyof typeof statusConfig].color} border text-xs font-mono mb-1`}>
+                              {eq.gostAnalysis?.zone}
+                            </Badge>
+                            <p className="text-lg text-red-400 font-mono font-bold">
+                              {eq.vibrationData[eq.vibrationData.length - 1]?.value.toFixed(1)} мм/с
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-green-400 font-mono">✓ Критических агрегатов не обнаружено</p>
+                )}
+              </div>
+
+              <div className="p-4 bg-muted/20 border-l-4 border-yellow-500">
+                <h3 className="text-sm text-yellow-400 font-mono font-bold mb-3">ТРЕБУЮТ ВНИМАНИЯ</h3>
+                {processedEquipment.filter(e => e.gostAnalysis?.zone === 'B').length > 0 ? (
+                  <div className="space-y-2">
+                    {processedEquipment.filter(e => e.gostAnalysis?.zone === 'B').map(eq => (
+                      <div key={eq.id} className="flex justify-between items-center p-2 bg-yellow-500/5 border border-yellow-500/20">
+                        <p className="text-xs text-foreground font-mono">[{eq.id}] {eq.name}</p>
+                        <p className="text-sm text-yellow-400 font-mono">{eq.vibrationData[eq.vibrationData.length - 1]?.value.toFixed(1)} мм/с</p>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-xs text-green-400 font-mono">✓ Все агрегаты в норме</p>
+                )}
+              </div>
+
+              <div className="p-4 bg-muted/20 border-l-4 border-blue-500">
+                <h3 className="text-sm text-blue-400 font-mono font-bold mb-3">ОБЩИЕ РЕКОМЕНДАЦИИ</h3>
+                <ul className="space-y-2 text-xs text-foreground font-mono">
+                  {processedEquipment.filter(e => e.gostAnalysis?.zone === 'D').length > 0 && (
+                    <li className="p-2 bg-red-500/10 border-l-2 border-red-500">
+                      <span className="text-red-400 font-bold">⚠ КРИТИЧНО:</span> Немедленно остановить агрегаты в зоне D и провести аварийную диагностику
+                    </li>
+                  )}
+                  {processedEquipment.filter(e => e.gostAnalysis?.zone === 'C').length > 0 && (
+                    <li className="p-2 bg-orange-500/10 border-l-2 border-orange-500">
+                      <span className="text-orange-400 font-bold">⚠ СРОЧНО:</span> Ограничить работу агрегатов зоны C, запланировать ремонт в течение 2 недель
+                    </li>
+                  )}
+                  {processedEquipment.filter(e => e.gostAnalysis?.zone === 'B').length > 0 && (
+                    <li className="p-2 bg-yellow-500/10 border-l-2 border-yellow-500">
+                      <span className="text-yellow-400 font-bold">⚡</span> Увеличить частоту мониторинга агрегатов зоны B до 2 раз в месяц
+                    </li>
+                  )}
+                  <li className="p-2 bg-green-500/10 border-l-2 border-green-500">
+                    <span className="text-green-400 font-bold">✓</span> Продолжить плановый мониторинг всех агрегатов согласно графику
+                  </li>
+                  <li className="p-2 bg-blue-500/10 border-l-2 border-blue-500">
+                    <span className="text-blue-400 font-bold">ℹ</span> Следующие измерения провести через 1 месяц для агрегатов зоны A
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </Card>
+        ) : equipment.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
             <div className="w-20 h-20 bg-green-500/10 border-2 border-green-500/50 flex items-center justify-center mb-4">
               <Icon name="Upload" size={40} className="text-green-400" />
@@ -447,7 +573,7 @@ export default function Index() {
               </div>
 
               <Tabs defaultValue="trend" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 mb-4 bg-muted/50 border border-green-500/30">
+                <TabsList className="grid w-full grid-cols-4 mb-4 bg-muted/50 border border-green-500/30">
                   <TabsTrigger
                     value="trend"
                     className="font-mono text-xs data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400"
@@ -459,6 +585,12 @@ export default function Index() {
                     className="font-mono text-xs data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400"
                   >
                     GOST
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="report"
+                    className="font-mono text-xs data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400"
+                  >
+                    ОТЧЁТ
                   </TabsTrigger>
                   <TabsTrigger
                     value="info"
@@ -537,6 +669,115 @@ export default function Index() {
                       <p className="text-xs text-muted-foreground font-mono">
                         Текущее значение: {currentVibration.toFixed(2)} мм/с
                       </p>
+                    </div>
+                  </>
+                )}
+              </TabsContent>
+
+              <TabsContent value="report" className="space-y-4">
+                {gostAnalysis && (
+                  <>
+                    <div className="p-4 bg-muted/20 border-l-4 border-blue-500">
+                      <h3 className="text-xs text-blue-400 font-mono font-bold mb-2">ОЦЕНКА СОСТОЯНИЯ</h3>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs text-muted-foreground font-mono">Зона по ГОСТ:</span>
+                          <Badge variant="outline" className={`${statusConfig[gostAnalysis.color as keyof typeof statusConfig].color} border text-xs font-mono`}>
+                            {gostAnalysis.zone}
+                          </Badge>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs text-muted-foreground font-mono">Статус:</span>
+                          <span className={`text-xs font-mono text-${gostAnalysis.color}-400`}>{gostAnalysis.label}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-xs text-muted-foreground font-mono">Тренд:</span>
+                          <span className={`text-xs font-mono ${trendConfig[trendAnalysis!.trend].color}`}>
+                            {trendAnalysis!.trend === 'rising' ? '↑ Растёт' : trendAnalysis!.trend === 'falling' ? '↓ Снижается' : '→ Стабильно'}
+                            {' '}({trendAnalysis!.changePercent > 0 ? '+' : ''}{trendAnalysis!.changePercent.toFixed(1)}%)
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="p-4 bg-muted/20 border-l-4 border-yellow-500">
+                      <h3 className="text-xs text-yellow-400 font-mono font-bold mb-2">РЕКОМЕНДАЦИИ</h3>
+                      <p className="text-xs text-foreground font-mono leading-relaxed mb-3">{gostAnalysis.recommendation}</p>
+                      {gostAnalysis.zone === 'C' || gostAnalysis.zone === 'D' ? (
+                        <div className="mt-3 p-3 bg-red-500/10 border border-red-500/30">
+                          <p className="text-xs text-red-400 font-mono font-bold">⚠ ТРЕБУЮТСЯ СРОЧНЫЕ МЕРЫ!</p>
+                        </div>
+                      ) : null}
+                    </div>
+
+                    <div className="p-4 bg-muted/20 border-l-4 border-green-500">
+                      <h3 className="text-xs text-green-400 font-mono font-bold mb-2">ВОЗМОЖНЫЕ ПРИЧИНЫ</h3>
+                      <ul className="space-y-1 text-xs text-foreground font-mono">
+                        {currentVibration > 4.5 ? (
+                          <>
+                            <li>• Дисбаланс ротора</li>
+                            <li>• Расцентровка валов</li>
+                            <li>• Износ подшипников</li>
+                            <li>• Ослабление крепления</li>
+                          </>
+                        ) : currentVibration > 2.8 ? (
+                          <>
+                            <li>• Начальный дисбаланс</li>
+                            <li>• Неточная центровка</li>
+                            <li>• Загрязнение рабочих органов</li>
+                          </>
+                        ) : (
+                          <li>• Нормальная работа оборудования</li>
+                        )}
+                      </ul>
+                    </div>
+
+                    <div className="p-4 bg-muted/20 border-l-4 border-purple-500">
+                      <h3 className="text-xs text-purple-400 font-mono font-bold mb-2">ПЛАН ДЕЙСТВИЙ</h3>
+                      <ol className="space-y-2 text-xs text-foreground font-mono">
+                        {gostAnalysis.zone === 'A' ? (
+                          <>
+                            <li>1. Продолжить мониторинг по графику</li>
+                            <li>2. Следующее измерение через 1 месяц</li>
+                            <li>3. Плановое ТО согласно регламенту</li>
+                          </>
+                        ) : gostAnalysis.zone === 'B' ? (
+                          <>
+                            <li>1. Увеличить частоту измерений (каждые 2 недели)</li>
+                            <li>2. Провести визуальный осмотр креплений</li>
+                            <li>3. Запланировать балансировку на ближайшее ТО</li>
+                            <li>4. Проверить центровку валов</li>
+                          </>
+                        ) : gostAnalysis.zone === 'C' ? (
+                          <>
+                            <li>1. <span className="text-orange-400">СРОЧНО:</span> Провести полную диагностику</li>
+                            <li>2. Ограничить время непрерывной работы</li>
+                            <li>3. Проверить состояние подшипников</li>
+                            <li>4. Запланировать ремонт в течение 2 недель</li>
+                            <li>5. Усилить контроль - измерения каждую неделю</li>
+                          </>
+                        ) : (
+                          <>
+                            <li>1. <span className="text-red-400">КРИТИЧНО:</span> Остановить агрегат</li>
+                            <li>2. Провести аварийную диагностику</li>
+                            <li>3. Заменить изношенные узлы</li>
+                            <li>4. Выполнить балансировку и центровку</li>
+                            <li>5. Запретить эксплуатацию до устранения</li>
+                          </>
+                        )}
+                      </ol>
+                    </div>
+
+                    <div className="p-4 bg-muted/20 border border-green-500/20">
+                      <h3 className="text-xs text-muted-foreground font-mono font-bold mb-2">ИСТОРИЯ ИЗМЕРЕНИЙ</h3>
+                      <div className="max-h-32 overflow-y-auto space-y-1">
+                        {currentEquipment.vibrationData.map((d, i) => (
+                          <div key={i} className="flex justify-between text-xs font-mono">
+                            <span className="text-muted-foreground">{d.time}</span>
+                            <span className="text-foreground">{d.value.toFixed(2)} мм/с</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   </>
                 )}
