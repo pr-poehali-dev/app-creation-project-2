@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -101,6 +101,51 @@ export default function Index() {
     }
     alert('Данные добавлены!');
   };
+
+  const loadDemoData = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('/demo-vibration-data.csv');
+      const text = await response.text();
+      const workbook = XLSX.read(text, { type: 'string' });
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      
+      const parsedEquipment: EquipmentData[] = [];
+      const equipmentMap = new Map<string, any>();
+
+      jsonData.forEach((row: any) => {
+        const id = row['ID'] || row['id'];
+        const name = row['Название'] || row['name'];
+        const motor = row['Двигатель'] || row['motor'];
+        const power = parseFloat(String(row['Мощность'] || row['power']).replace(/[^\d.]/g, '')) || 0;
+        const time = row['Время'] || row['time'];
+        const value = parseFloat(String(row['Вибрация'] || row['vibration']).replace(/[^\d.]/g, '')) || 0;
+
+        if (!equipmentMap.has(id)) {
+          equipmentMap.set(id, { id, name, motor, power, vibrationData: [] });
+        }
+        equipmentMap.get(id).vibrationData.push({ time: time.toString(), value });
+      });
+
+      equipmentMap.forEach((eq) => parsedEquipment.push(eq));
+
+      if (parsedEquipment.length > 0) {
+        const processedData = processEquipmentData(parsedEquipment);
+        setEquipment(processedData);
+        setSelectedEquipment(processedData[0]);
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки демо-данных:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadDemoData();
+  }, []);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -480,30 +525,28 @@ export default function Index() {
               </div>
             </div>
           </Card>
+        ) : equipment.length === 0 && isLoading ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="w-20 h-20 bg-green-500/10 border-2 border-green-500/50 flex items-center justify-center mb-4 animate-pulse">
+              <Icon name="Loader" size={40} className="text-green-400 animate-spin" />
+            </div>
+            <p className="text-foreground font-mono text-lg mb-2">[LOADING_DATA...]</p>
+            <p className="text-muted-foreground font-mono text-sm">Загрузка демо-данных</p>
+          </div>
         ) : equipment.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20">
-            <div className="w-20 h-20 bg-green-500/10 border-2 border-green-500/50 flex items-center justify-center mb-4">
-              <Icon name="Upload" size={40} className="text-green-400" />
+            <div className="w-20 h-20 bg-red-500/10 border-2 border-red-500/50 flex items-center justify-center mb-4">
+              <Icon name="AlertCircle" size={40} className="text-red-400" />
             </div>
-            <p className="text-foreground font-mono text-lg mb-2">[NO_DATA_LOADED]</p>
-            <p className="text-muted-foreground font-mono text-sm mb-4">Загрузите XLS файл для начала анализа</p>
-            <div className="text-center">
-              <p className="text-xs text-muted-foreground font-mono mb-2">Пример структуры файла:</p>
-              <div className="bg-muted/20 p-4 rounded border border-green-500/20 font-mono text-xs text-left overflow-x-auto">
-                <div className="text-green-400 mb-2">ID        Название                    Двигатель      Мощность    Время           Вибрация</div>
-                <div className="text-muted-foreground">NA-101    Насосный агрегат №1         АИР 180M4      30          Январь 2024     2.1</div>
-                <div className="text-muted-foreground">NA-101    Насосный агрегат №1         АИР 180M4      30          Февраль 2024    2.3</div>
-                <div className="text-muted-foreground">NA-102    Насосный агрегат №2         АИР 200L6      45          Январь 2024     3.2</div>
-              </div>
-              <a 
-                href="/demo-vibration-data.txt" 
-                download="demo-vibration-data.txt"
-                className="inline-block mt-4 px-4 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/50 font-mono text-xs"
-              >
-                <Icon name="Download" size={14} className="inline mr-2" />
-                Скачать полный пример
-              </a>
-            </div>
+            <p className="text-foreground font-mono text-lg mb-2">[ERROR]</p>
+            <p className="text-muted-foreground font-mono text-sm mb-4">Не удалось загрузить демо-данные</p>
+            <Button
+              onClick={loadDemoData}
+              className="bg-green-500/20 hover:bg-green-500/30 text-green-400 border-2 border-green-500/50 font-mono text-xs"
+            >
+              <Icon name="RefreshCw" size={16} className="mr-2" />
+              ПОПРОБОВАТЬ СНОВА
+            </Button>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
