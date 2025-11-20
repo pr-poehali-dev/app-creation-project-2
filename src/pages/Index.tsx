@@ -37,6 +37,9 @@ export default function Index() {
   const [equipment, setEquipment] = useState<EquipmentData[]>([]);
   const [selectedEquipment, setSelectedEquipment] = useState<EquipmentData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newEquipment, setNewEquipment] = useState({ id: '', name: '', motor: '', power: '' });
+  const [newMeasurement, setNewMeasurement] = useState({ time: '', value: '' });
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const processEquipmentData = (equipmentList: EquipmentData[]) => {
@@ -53,6 +56,49 @@ export default function Index() {
         trendAnalysis,
       };
     });
+  };
+
+  const handleAddEquipment = () => {
+    if (!newEquipment.id || !newEquipment.name || !newEquipment.motor || !newEquipment.power) {
+      alert('Заполните все поля агрегата');
+      return;
+    }
+    if (!newMeasurement.time || !newMeasurement.value) {
+      alert('Заполните дату и значение вибрации');
+      return;
+    }
+
+    const existingEquipment = equipment.find(e => e.id === newEquipment.id);
+    let updatedEquipment: EquipmentData[];
+
+    if (existingEquipment) {
+      updatedEquipment = equipment.map(e => {
+        if (e.id === newEquipment.id) {
+          return {
+            ...e,
+            vibrationData: [...e.vibrationData, { time: newMeasurement.time, value: parseFloat(newMeasurement.value) }]
+          };
+        }
+        return e;
+      });
+    } else {
+      const newEq: EquipmentData = {
+        id: newEquipment.id,
+        name: newEquipment.name,
+        motor: newEquipment.motor,
+        power: parseFloat(newEquipment.power),
+        vibrationData: [{ time: newMeasurement.time, value: parseFloat(newMeasurement.value) }]
+      };
+      updatedEquipment = [...equipment, newEq];
+    }
+
+    const processed = processEquipmentData(updatedEquipment);
+    setEquipment(processed);
+    setNewMeasurement({ time: '', value: '' });
+    if (!existingEquipment) {
+      setNewEquipment({ id: '', name: '', motor: '', power: '' });
+    }
+    alert('Данные добавлены!');
   };
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -172,6 +218,13 @@ export default function Index() {
             </div>
             <div className="flex items-center gap-4">
               <Button
+                onClick={() => setShowAddForm(!showAddForm)}
+                className="bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border-2 border-blue-500/50 font-mono text-xs tracking-wider"
+              >
+                <Icon name="Plus" size={16} className="mr-2" />
+                {showAddForm ? '[CLOSE]' : '[ADD_DATA]'}
+              </Button>
+              <Button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isLoading}
                 className="bg-green-500/20 hover:bg-green-500/30 text-green-400 border-2 border-green-500/50 font-mono text-xs tracking-wider"
@@ -190,6 +243,85 @@ export default function Index() {
       </header>
 
       <main className="container mx-auto px-6 py-6">
+        {showAddForm && (
+          <Card className="p-6 bg-card border-2 border-blue-500/30 mb-6">
+            <h2 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2 tracking-wider font-mono">
+              <Icon name="Plus" size={18} className="text-blue-400" />
+              [ADD_NEW_DATA]
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs text-muted-foreground font-mono mb-2">ID АГРЕГАТА</label>
+                <input
+                  type="text"
+                  value={newEquipment.id}
+                  onChange={(e) => setNewEquipment({ ...newEquipment, id: e.target.value })}
+                  placeholder="NA-101"
+                  className="w-full p-2 bg-muted/20 border border-green-500/30 text-foreground font-mono text-sm focus:border-green-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-muted-foreground font-mono mb-2">НАЗВАНИЕ</label>
+                <input
+                  type="text"
+                  value={newEquipment.name}
+                  onChange={(e) => setNewEquipment({ ...newEquipment, name: e.target.value })}
+                  placeholder="Насосный агрегат №1"
+                  className="w-full p-2 bg-muted/20 border border-green-500/30 text-foreground font-mono text-sm focus:border-green-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-muted-foreground font-mono mb-2">ДВИГАТЕЛЬ</label>
+                <input
+                  type="text"
+                  value={newEquipment.motor}
+                  onChange={(e) => setNewEquipment({ ...newEquipment, motor: e.target.value })}
+                  placeholder="АИР 180M4"
+                  className="w-full p-2 bg-muted/20 border border-green-500/30 text-foreground font-mono text-sm focus:border-green-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-muted-foreground font-mono mb-2">МОЩНОСТЬ (кВт)</label>
+                <input
+                  type="number"
+                  value={newEquipment.power}
+                  onChange={(e) => setNewEquipment({ ...newEquipment, power: e.target.value })}
+                  placeholder="30"
+                  className="w-full p-2 bg-muted/20 border border-green-500/30 text-foreground font-mono text-sm focus:border-green-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-muted-foreground font-mono mb-2">ДАТА ИЗМЕРЕНИЯ</label>
+                <input
+                  type="text"
+                  value={newMeasurement.time}
+                  onChange={(e) => setNewMeasurement({ ...newMeasurement, time: e.target.value })}
+                  placeholder="Январь 2024"
+                  className="w-full p-2 bg-muted/20 border border-green-500/30 text-foreground font-mono text-sm focus:border-green-500 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs text-muted-foreground font-mono mb-2">ВИБРАЦИЯ (мм/с)</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  value={newMeasurement.value}
+                  onChange={(e) => setNewMeasurement({ ...newMeasurement, value: e.target.value })}
+                  placeholder="2.5"
+                  className="w-full p-2 bg-muted/20 border border-green-500/30 text-foreground font-mono text-sm focus:border-green-500 outline-none"
+                />
+              </div>
+            </div>
+            <Button
+              onClick={handleAddEquipment}
+              className="mt-4 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 border-2 border-blue-500/50 font-mono text-xs tracking-wider"
+            >
+              <Icon name="Save" size={16} className="mr-2" />
+              [SAVE_DATA]
+            </Button>
+          </Card>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
           <Card className="p-6 bg-card border-2 border-green-500/30">
             <div className="flex items-center justify-between mb-3">
