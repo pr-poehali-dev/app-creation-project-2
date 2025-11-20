@@ -235,8 +235,8 @@ export default function Index() {
                 <p className="text-green-400">ID, Название, Двигатель, Мощность, Время, Вибрация</p>
               </div>
               <a 
-                href="/demo-vibration-data.csv" 
-                download
+                href="/demo-vibration-data.txt" 
+                download="demo-vibration-data.csv"
                 className="inline-block mt-4 px-4 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/50 font-mono text-xs"
               >
                 <Icon name="Download" size={14} className="inline mr-2" />
