@@ -31,40 +31,11 @@ interface EquipmentData {
   };
 }
 
-const demoEquipment: EquipmentData[] = [
-  {
-    id: 'NA-101',
-    name: 'Насосный агрегат №1',
-    motor: 'АИР 180M4',
-    power: 30,
-    vibrationData: [
-      { time: '00:00', value: 2.1 },
-      { time: '04:00', value: 2.3 },
-      { time: '08:00', value: 2.8 },
-      { time: '12:00', value: 3.1 },
-      { time: '16:00', value: 2.9 },
-      { time: '20:00', value: 2.4 },
-    ],
-  },
-  {
-    id: 'NA-102',
-    name: 'Насосный агрегат №2',
-    motor: 'АИР 200L6',
-    power: 45,
-    vibrationData: [
-      { time: '00:00', value: 3.2 },
-      { time: '04:00', value: 3.5 },
-      { time: '08:00', value: 3.9 },
-      { time: '12:00', value: 4.2 },
-      { time: '16:00', value: 4.5 },
-      { time: '20:00', value: 4.8 },
-    ],
-  },
-];
+
 
 export default function Index() {
-  const [equipment, setEquipment] = useState<EquipmentData[]>(demoEquipment);
-  const [selectedEquipment, setSelectedEquipment] = useState<EquipmentData>(demoEquipment[0]);
+  const [equipment, setEquipment] = useState<EquipmentData[]>([]);
+  const [selectedEquipment, setSelectedEquipment] = useState<EquipmentData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -143,23 +114,12 @@ export default function Index() {
     reader.readAsArrayBuffer(file);
   };
 
-  const processedEquipment = equipment.map((item) => {
-    if (!item.gostAnalysis || !item.trendAnalysis) {
-      const values = item.vibrationData.map((d) => d.value);
-      const currentVibration = values[values.length - 1] || 0;
-      return {
-        ...item,
-        gostAnalysis: analyzeVibrationGOST(currentVibration, item.power),
-        trendAnalysis: getTrendAnalysis(values),
-      };
-    }
-    return item;
-  });
+  const processedEquipment = equipment;
 
-  const currentEquipment = processedEquipment.find((e) => e.id === selectedEquipment.id) || processedEquipment[0];
-  const currentVibration = currentEquipment.vibrationData[currentEquipment.vibrationData.length - 1]?.value || 0;
-  const gostAnalysis = currentEquipment.gostAnalysis!;
-  const trendAnalysis = currentEquipment.trendAnalysis!;
+  const currentEquipment = selectedEquipment && processedEquipment.find((e) => e.id === selectedEquipment.id);
+  const currentVibration = currentEquipment ? currentEquipment.vibrationData[currentEquipment.vibrationData.length - 1]?.value || 0 : 0;
+  const gostAnalysis = currentEquipment?.gostAnalysis;
+  const trendAnalysis = currentEquipment?.trendAnalysis;
 
   const statusConfig = {
     green: { color: 'bg-green-500/20 text-green-400 border-green-500/50', icon: 'CheckCircle' },
@@ -251,15 +211,24 @@ export default function Index() {
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card className="p-6 bg-card border-2 border-green-500/30">
-            <h2 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2 tracking-wider font-mono">
-              <Icon name="List" size={18} className="text-green-400" />
-              [EQUIPMENT_REGISTRY]
-            </h2>
+        {equipment.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20">
+            <div className="w-20 h-20 bg-green-500/10 border-2 border-green-500/50 flex items-center justify-center mb-4">
+              <Icon name="Upload" size={40} className="text-green-400" />
+            </div>
+            <p className="text-foreground font-mono text-lg mb-2">[NO_DATA_LOADED]</p>
+            <p className="text-muted-foreground font-mono text-sm">Загрузите XLS файл для начала анализа</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="p-6 bg-card border-2 border-green-500/30">
+              <h2 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2 tracking-wider font-mono">
+                <Icon name="List" size={18} className="text-green-400" />
+                [EQUIPMENT_REGISTRY]
+              </h2>
 
-            <div className="space-y-2 max-h-[600px] overflow-y-auto">
-              {processedEquipment.map((item) => {
+              <div className="space-y-2 max-h-[600px] overflow-y-auto">
+                {processedEquipment.map((item) => {
                 const analysis = item.gostAnalysis!;
                 const trend = item.trendAnalysis!;
                 const statusInfo = statusConfig[analysis.color as keyof typeof statusConfig];
@@ -271,7 +240,7 @@ export default function Index() {
                     key={item.id}
                     onClick={() => setSelectedEquipment(item)}
                     className={`w-full p-4 border-2 transition-all text-left font-mono ${
-                      selectedEquipment.id === item.id
+                      selectedEquipment?.id === item.id
                         ? 'border-green-500 bg-green-500/10'
                         : 'border-muted bg-card/50 hover:border-green-500/50'
                     }`}
@@ -308,43 +277,44 @@ export default function Index() {
             </div>
           </Card>
 
-          <Card className="p-6 bg-card border-2 border-green-500/30">
-            <div className="mb-4">
-              <h2 className="text-sm font-bold text-foreground flex items-center gap-2 mb-1 tracking-wider font-mono">
-                <Icon name="TrendingUp" size={18} className="text-green-400" />
-                [ANALYSIS_MODULE]
-              </h2>
-              <p className="text-xs text-muted-foreground font-mono">
-                {currentEquipment.id} / {currentEquipment.name}
-              </p>
-            </div>
+          {currentEquipment && (
+            <Card className="p-6 bg-card border-2 border-green-500/30">
+              <div className="mb-4">
+                <h2 className="text-sm font-bold text-foreground flex items-center gap-2 mb-1 tracking-wider font-mono">
+                  <Icon name="TrendingUp" size={18} className="text-green-400" />
+                  [ANALYSIS_MODULE]
+                </h2>
+                <p className="text-xs text-muted-foreground font-mono">
+                  {currentEquipment.id} / {currentEquipment.name}
+                </p>
+              </div>
 
-            <Tabs defaultValue="trend" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-4 bg-muted/50 border border-green-500/30">
-                <TabsTrigger
-                  value="trend"
-                  className="font-mono text-xs data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400"
-                >
-                  TREND
-                </TabsTrigger>
-                <TabsTrigger
-                  value="gost"
-                  className="font-mono text-xs data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400"
-                >
-                  GOST
-                </TabsTrigger>
-                <TabsTrigger
-                  value="info"
-                  className="font-mono text-xs data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400"
-                >
-                  INFO
-                </TabsTrigger>
-              </TabsList>
+              <Tabs defaultValue="trend" className="w-full">
+                <TabsList className="grid w-full grid-cols-3 mb-4 bg-muted/50 border border-green-500/30">
+                  <TabsTrigger
+                    value="trend"
+                    className="font-mono text-xs data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400"
+                  >
+                    TREND
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="gost"
+                    className="font-mono text-xs data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400"
+                  >
+                    GOST
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="info"
+                    className="font-mono text-xs data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400"
+                  >
+                    INFO
+                  </TabsTrigger>
+                </TabsList>
 
-              <TabsContent value="trend" className="space-y-4">
-                <div className="h-[280px] p-4 bg-muted/20 border border-green-500/20">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={currentEquipment.vibrationData}>
+                <TabsContent value="trend" className="space-y-4">
+                  <div className="h-[280px] p-4 bg-muted/20 border border-green-500/20">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <AreaChart data={currentEquipment.vibrationData}>
                       <defs>
                         <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
@@ -377,38 +347,42 @@ export default function Index() {
 
                 <div className="p-4 bg-muted/20 border-l-4 border-green-500">
                   <p className="text-xs text-muted-foreground mb-1 font-mono">TREND ANALYSIS</p>
-                  <p className="text-sm text-foreground font-mono">{trendAnalysis.description}</p>
+                  <p className="text-sm text-foreground font-mono">{trendAnalysis?.description}</p>
                 </div>
               </TabsContent>
 
               <TabsContent value="gost" className="space-y-4">
-                <div className={`p-4 border-l-4 border-${gostAnalysis.color}-500 bg-${gostAnalysis.color}-500/10`}>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Icon
-                      name={statusConfig[gostAnalysis.color as keyof typeof statusConfig].icon}
-                      size={20}
-                      className={`text-${gostAnalysis.color}-400`}
-                    />
-                    <p className="text-sm font-bold text-foreground font-mono">{gostAnalysis.label}</p>
-                  </div>
-                  <p className="text-xs text-muted-foreground font-mono mb-2">{gostAnalysis.description}</p>
-                </div>
+                {gostAnalysis && (
+                  <>
+                    <div className={`p-4 border-l-4 border-${gostAnalysis.color}-500 bg-${gostAnalysis.color}-500/10`}>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Icon
+                          name={statusConfig[gostAnalysis.color as keyof typeof statusConfig].icon}
+                          size={20}
+                          className={`text-${gostAnalysis.color}-400`}
+                        />
+                        <p className="text-sm font-bold text-foreground font-mono">{gostAnalysis.label}</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground font-mono mb-2">{gostAnalysis.description}</p>
+                    </div>
 
-                <div className="p-4 bg-muted/20 border border-green-500/20">
-                  <p className="text-xs text-muted-foreground mb-2 font-mono">РЕКОМЕНДАЦИИ:</p>
-                  <p className="text-sm text-foreground font-mono leading-relaxed">{gostAnalysis.recommendation}</p>
-                </div>
+                    <div className="p-4 bg-muted/20 border border-green-500/20">
+                      <p className="text-xs text-muted-foreground mb-2 font-mono">РЕКОМЕНДАЦИИ:</p>
+                      <p className="text-sm text-foreground font-mono leading-relaxed">{gostAnalysis.recommendation}</p>
+                    </div>
 
-                <div className="p-4 bg-muted/20 border border-green-500/20">
-                  <p className="text-xs text-muted-foreground mb-2 font-mono">СТАНДАРТ:</p>
-                  <p className="text-xs text-foreground font-mono">ГОСТ Р ИСО 20816-1-2021</p>
-                  <p className="text-xs text-muted-foreground font-mono mt-1">
-                    Мощность: {currentEquipment.power} кВт
-                  </p>
-                  <p className="text-xs text-muted-foreground font-mono">
-                    Текущее значение: {currentVibration.toFixed(2)} мм/с
-                  </p>
-                </div>
+                    <div className="p-4 bg-muted/20 border border-green-500/20">
+                      <p className="text-xs text-muted-foreground mb-2 font-mono">СТАНДАРТ:</p>
+                      <p className="text-xs text-foreground font-mono">ГОСТ Р ИСО 20816-1-2021</p>
+                      <p className="text-xs text-muted-foreground font-mono mt-1">
+                        Мощность: {currentEquipment.power} кВт
+                      </p>
+                      <p className="text-xs text-muted-foreground font-mono">
+                        Текущее значение: {currentVibration.toFixed(2)} мм/с
+                      </p>
+                    </div>
+                  </>
+                )}
               </TabsContent>
 
               <TabsContent value="info" className="space-y-3">
@@ -436,7 +410,9 @@ export default function Index() {
               </TabsContent>
             </Tabs>
           </Card>
-        </div>
+          )}
+          </div>
+        )}
       </main>
     </div>
   );
