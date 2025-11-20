@@ -488,17 +488,20 @@ export default function Index() {
             <p className="text-foreground font-mono text-lg mb-2">[NO_DATA_LOADED]</p>
             <p className="text-muted-foreground font-mono text-sm mb-4">Загрузите XLS файл для начала анализа</p>
             <div className="text-center">
-              <p className="text-xs text-muted-foreground font-mono mb-2">Формат XLS файла:</p>
-              <div className="bg-muted/20 p-3 rounded border border-green-500/20 font-mono text-xs text-left">
-                <p className="text-green-400">ID, Название, Двигатель, Мощность, Время, Вибрация</p>
+              <p className="text-xs text-muted-foreground font-mono mb-2">Пример структуры файла:</p>
+              <div className="bg-muted/20 p-4 rounded border border-green-500/20 font-mono text-xs text-left overflow-x-auto">
+                <div className="text-green-400 mb-2">ID        Название                    Двигатель      Мощность    Время           Вибрация</div>
+                <div className="text-muted-foreground">NA-101    Насосный агрегат №1         АИР 180M4      30          Январь 2024     2.1</div>
+                <div className="text-muted-foreground">NA-101    Насосный агрегат №1         АИР 180M4      30          Февраль 2024    2.3</div>
+                <div className="text-muted-foreground">NA-102    Насосный агрегат №2         АИР 200L6      45          Январь 2024     3.2</div>
               </div>
               <a 
                 href="/demo-vibration-data.txt" 
-                download="demo-vibration-data.csv"
+                download="demo-vibration-data.txt"
                 className="inline-block mt-4 px-4 py-2 bg-green-500/20 hover:bg-green-500/30 text-green-400 border border-green-500/50 font-mono text-xs"
               >
                 <Icon name="Download" size={14} className="inline mr-2" />
-                Скачать пример CSV
+                Скачать полный пример
               </a>
             </div>
           </div>
